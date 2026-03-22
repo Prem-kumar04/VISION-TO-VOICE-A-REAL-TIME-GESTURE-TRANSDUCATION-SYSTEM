@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vision to Voice - Login</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@200;300;400;500;600;700&display=swap");
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Open Sans", sans-serif;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url("https://i.ibb.co/XcCk6Fq/abcd.png");
+            background-position: center;
+            background-size: cover;
+            background-attachment: fixed;
+        }
+
+        .wrapper {
+            width: 100%;
+            max-width: 350px;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            border: 1px solid rgba(0, 0, 0, 0);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            background: transparent;
+            border-color: #000000;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0);
+            position: relative;
+            z-index: 10;
+            margin-left: 500px;
+            margin-top: 200px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-title {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(5, 5, 5, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .project-title h3 {
+            color: rgba(0, 0, 0, 0);
+            font-size: 1.5rem;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .project-title .icon-vision {
+            color: rgba(0, 0, 0, 0);
+            font-size: 1.5rem;
+        }
+
+        .project-title .icon-voice {
+            color: rgba(0, 0, 0, 0);
+            font-size: 1.5rem;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: rgba(0, 0, 0, 0);
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: rgba(0, 0, 0, 0);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-field {
+            position: relative;
+            border-bottom: 2px solid rgba(0, 0, 0, 0);
+            margin: 20px 0;
+            transition: 0.15s ease;
+        }
+
+        .input-field:focus-within {
+            border-bottom-color: rgba(0, 0, 0, 0);
+        }
+
+        .input-field label {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            color: rgba(0, 0, 0, 0.6);
+            font-size: 15px;
+            pointer-events: none;
+            transition: 0.15s ease;
+            font-weight: 500;
+        }
+
+        .input-field input {
+            width: 100%;
+            height: 45px;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: #000000;
+        }
+
+        .input-field input::placeholder {
+            color: transparent;
+        }
+
+        .input-field input:focus~label,
+        .input-field input:valid~label {
+            font-size: 0.75rem;
+            top: 10px;
+            transform: translateY(-120%);
+            color: #000000;
+            font-weight: 600;
+        }
+
+        .input-field input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px #000000 inset !important;
+            -webkit-text-fill-color: #000000 !important;
+        }
+
+        .forget {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 30px 0 35px 0;
+            color: #000000;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .forget a {
+            color: #000000;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: 0.15s ease;
+        }
+
+        .forget a:hover {
+            color: #000000;
+            text-decoration: underline;
+        }
+
+        button {
+            background: linear-gradient(90deg, #ffb74d, #ffb300);
+            color: #111215;
+            font-weight: 700;
+            border: none;
+            padding: 13px 20px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 16px;
+            border: 2px solid transparent;
+            transition: 0.3s ease;
+            margin-top: 10px;
+            box-shadow: 0 6px 18px rgba(255, 183, 77, 0.12);
+        }
+
+        button:hover {
+            color: #111215;
+            border-color: transparent;
+            background: linear-gradient(90deg, #ffb300, #ffb74d);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(255, 183, 77, 0.16);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            border-radius: 8px;
+            border: none;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-danger {
+            background-color: rgba(223, 62, 62, 0.15);
+            color: #000000;
+            border-left: 4px solid #000000;
+        }
+
+        .alert-success {
+            background-color: rgba(156, 204, 101, 0.15);
+            color: #b3ffb3;
+            border-left: 4px solid #9ccc65;
+        }
+
+        .register-section {
+            text-align: center;
+            margin-top: 25px;
+            color: rgba(0, 0, 0, 0.7);
+            font-size: 0.95rem;
+        }
+
+        .register-section a {
+            color: #000000;
+            text-decoration: none;
+            font-weight: 600;
+            transition: 0.15s ease;
+        }
+
+        .register-section a:hover {
+            color: #000000;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .wrapper {
+                padding: 25px;
+                max-width: 90vw;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+                color: #000000;
+            }
+
+            .forget {
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        
+
+        <form method="POST">
+            <h2 style="color: #000000;">Login</h2>
+            <p class="subtitle">Sign in to your account</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="input-field">
+                <input type="text" name="username" required>
+                <label>Username</label>
+            </div>
+
+            <div class="input-field">
+                <input type="password" name="password" required>
+                <label>Password</label>
+            </div>
+
+            <div class="forget">
+                <a href="/signup">Register</a>
+                <a href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit">
+                <i class="fas fa-sign-in-alt"></i> Log In
+            </button>
+        </form>
+
+        <div class="register-section" style="color: #000000;">
+            Don't have an account? <a href="/signup">Create one now</a>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Sign Language</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .suggestion-ghost { color: #b2bec3; }
+        #enterHint { font-size: 0.8rem; color: #0984e3; display: none; margin-top: 5px; }
+        .big-live-letter {
+            font-size: 5rem; font-weight: 900; color: #e84393;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            min-height: 100px; display: block;
+        }
+        .speak-btn {
+            background: none; border: none; font-size: 1.5rem; cursor: pointer;
+            transition: transform 0.2s; float: right;
+        }
+        .speak-btn:hover { transform: scale(1.2); }
+    </style>
+</head>
+<body id="dashboard-page">
+
+    <div class="navbar-custom d-flex justify-content-between">
+        <h4 class="text-white m-0">SignTranslator AI</h4>
+        <div>
+            <select class="form-select d-inline w-auto me-2" onchange="setLanguage(this.value)">
+                <option value="te">Telugu</option>
+                <option value="hi">Hindi</option>
+                <option value="ta">Tamil</option>
+                <option value="en">English</option>
+            </select>
+            <a href="/profile" class="btn btn-outline-light btn-sm">Profile</a>
+            <a href="/logout" class="btn btn-danger btn-sm ms-2">Logout</a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="camera-container">
+            <img src="{{ url_for('video_feed') }}" class="camera-feed">
+        </div>
+
+        <div class="text-panel">
+            <div class="live-word-box">
+                <h6 class="text-muted text-uppercase">You are signing:</h6>
+                <span id="livePreview" class="big-live-letter">_</span>
+                <hr>
+                <h6 class="text-muted">Word Building:</h6>
+                <div>
+                    <span id="liveWord" class="live-word-text"></span>
+                    <span id="suggestionText" class="live-word-text suggestion-ghost"></span>
+                </div>
+                <div class="mt-2">
+                    <span id="confScore" class="badge bg-warning text-dark">0%</span>
+                </div>
+                <div id="enterHint">[Press ENTER to Autofill]</div>
+            </div>
+            
+            <div class="transcript-box">
+                <p id="engOut" class="eng-sent"></p>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <p id="nativeOut" class="native-sent m-0"></p>
+                    <button type="button" class="speak-btn" onclick="playFullSentence()" title="Read Aloud">🔊</button>
+                </div>
+            </div>
+            
+            <div class="row g-2">
+                <div class="col-6">
+                    <button id="saveBtn" class="btn btn-success w-100" onclick="saveSession()">Save Session</button>
+                </div>
+                <div class="col-6">
+                    <a href="/download_transcript" class="btn btn-outline-primary w-100" target="_blank">Download</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
