@@ -12,7 +12,7 @@ from datetime import datetime
 import io
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -260,4 +260,5 @@ def set_language():
 
 if __name__ == '__main__':
     # threaded=True allows Camera + Buttons + Keyboard to work simultaneously
-    app.run(debug=True, port=5001, threaded=True)
+    port = int(os.environ.get('PORT', 5001))
+    app.run(debug=False, host='0.0.0.0', port=port, threaded=True)

@@ -105,18 +105,26 @@ except FileNotFoundError:
 
 class VideoCamera(object):
     def __init__(self):
-        self.video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
+        self.camera_available = False
+        self.video = None
         
-        # Add this check
-        if not self.video.isOpened():
-            print("❌ Camera failed to open! Trying index 1...")
-            self.video = cv2.VideoCapture(1)
-        
-        if not self.video.isOpened():
-            print("❌ Camera index 1 also failed. Check camera permissions.")
-        else:
-            print("✅ Camera opened successfully")
+        try:
+            self.video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+            if not self.video.isOpened():
+                print("Camera index 0 failed. Trying index 1...")
+                self.video = cv2.VideoCapture(1)
+            
+            if not self.video.isOpened():
+                # Try without CAP_DSHOW (for Linux/Render)
+                self.video = cv2.VideoCapture(0)
+            
+            if self.video.isOpened():
+                self.camera_available = True
+                print("Camera opened successfully")
+            else:
+                print("No camera available - running in demo mode")
+        except Exception as e:
+            print(f"Camera init error: {e} - running in demo mode")
         
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)
@@ -125,7 +133,25 @@ class VideoCamera(object):
         self.hand_was_visible = False
 
     def __del__(self):
-        self.video.release()
+        if self.video and self.video.isOpened():
+            self.video.release()
+
+    def _placeholder_frame(self):
+        """Return a placeholder frame when no camera is available."""
+        frame = np.zeros((480, 640, 3), dtype=np.uint8)
+        # Dark gradient background
+        for i in range(480):
+            frame[i, :] = [int(30 + i * 0.05), int(20 + i * 0.03), int(40 + i * 0.06)]
+        
+        cv2.putText(frame, "No Camera Available", (120, 220),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1.2, (200, 200, 200), 2)
+        cv2.putText(frame, "Running in Demo Mode", (150, 270),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (150, 150, 150), 1)
+        cv2.putText(frame, "Use keyboard to type signs", (130, 320),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (100, 180, 255), 1)
+        
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        return jpeg.tobytes()
 
     def predict_sign(self, frame):
         h, w, c = frame.shape
@@ -142,7 +168,7 @@ class VideoCamera(object):
             if state.two_hand_frame_count > 5:
                 # Cooldown (0.8 seconds)
                 if current_time - state.last_delete_time > 0.8:
-                    print("✌️ TWO HANDS -> SMART BACKSPACE")
+                    print("TWO HANDS -> SMART BACKSPACE")
                     
                     perform_backspace() # <--- CALL SHARED LOGIC
                     
@@ -214,8 +240,12 @@ class VideoCamera(object):
         update_suggestions()
 
     def get_frame(self):
+        if not self.camera_available:
+            return self._placeholder_frame()
+        
         success, frame = self.video.read()
-        if not success: return None
+        if not success: 
+            return self._placeholder_frame()
         frame = cv2.flip(frame, 1)
         frame = self.predict_sign(frame)
         ret, jpeg = cv2.imencode('.jpg', frame)

@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+instance/
+static/audio/*.mp3
+.DS_Store
+data.csv
