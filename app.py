@@ -2,8 +2,7 @@ from flask import Flask, render_template, Response, request, redirect, url_for, 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_bcrypt import Bcrypt
-# IMPORTS from camera.py (ensure perform_backspace is included)
-from camera import VideoCamera, state, commit_current_word, data_lock, update_suggestions, perform_backspace
+from camera import VideoCamera, FrameProcessor, state, commit_current_word, data_lock, update_suggestions, perform_backspace
 import json
 import os
 import time
@@ -14,6 +13,7 @@ import io
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max for frame uploads
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
@@ -23,12 +23,14 @@ login_manager.login_view = 'login'
 if not os.path.exists('static/audio'):
     os.makedirs('static/audio')
 
+# Create a single FrameProcessor instance (for browser webcam mode)
+frame_processor = FrameProcessor()
+
 # --- DATABASE MODELS ---
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(60), nullable=False)
-    # Stores list of learned words as a JSON string
     personal_history = db.Column(db.Text, default='[]') 
     sessions = db.relationship('Session', backref='author', lazy=True)
 
@@ -55,7 +57,6 @@ def login():
         user = User.query.filter_by(username=request.form.get('username')).first()
         if user and bcrypt.check_password_hash(user.password, request.form.get('password')):
             login_user(user)
-            # Load user's personal dictionary into the AI autocomplete
             try: 
                 saved_words = json.loads(user.personal_history)
                 state.word_history.update(saved_words)
@@ -96,17 +97,11 @@ def dashboard():
 @app.route("/profile")
 @login_required
 def profile():
-    # Fetch recent sessions (newest first)
     sessions = Session.query.filter_by(user_id=current_user.id).order_by(Session.date_posted.desc()).all()
-    
-    # Get learned words list safely
     try: learned_words = json.loads(current_user.personal_history)
     except: learned_words = []
-    
-    # Prepare data for Activity Graph (Last 5 sessions)
     graph_labels = [s.date_posted.strftime('%d-%b') for s in sessions[:5]] 
     graph_data = [len(s.english_text.split()) for s in sessions[:5]]
-    
     return render_template('profile.html', 
                            sessions=sessions, 
                            user=current_user,
@@ -121,15 +116,12 @@ def resume_session(session_id):
     if session.author != current_user:
         flash('Access Denied', 'danger')
         return redirect(url_for('profile'))
-    
-    # Load previous session text into global state
     state.current_sentence_en = session.english_text + " "
     state.current_sentence_native = session.native_text + " "
-    
     flash('Session Resumed! You can continue signing.', 'success')
     return redirect(url_for('dashboard'))
 
-# --- VIDEO STREAMING ---
+# --- VIDEO STREAMING (legacy server-side camera) ---
 @app.route('/video_feed')
 @login_required
 def video_feed():
@@ -138,6 +130,41 @@ def video_feed():
             frame = camera.get_frame()
             if frame: yield (b'--frame\r\nContent-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
     return Response(gen(VideoCamera()), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# ============================================================
+# BROWSER WEBCAM ENDPOINT (works on Render!)
+# ============================================================
+@app.route('/process_frame', methods=['POST'])
+@login_required
+def process_frame():
+    """Receives a base64 frame from browser webcam, processes it, returns results."""
+    data = request.get_json()
+    if not data or 'frame' not in data:
+        return jsonify({'error': 'No frame data'}), 400
+    
+    annotated_frame, prediction_data = frame_processor.process_browser_frame(data['frame'])
+    
+    if annotated_frame is None:
+        return jsonify({'error': 'Frame processing failed'}), 500
+    
+    return jsonify({
+        'annotated_frame': annotated_frame,
+        **prediction_data
+    })
+
+# ============================================================
+# CAMERA MODE DETECTION
+# ============================================================
+@app.route('/camera_mode')
+def camera_mode():
+    """Tell the frontend which camera mode to use."""
+    # On Render, use browser camera. Locally, also use browser camera for consistency.
+    # The RENDER environment variable is automatically set by Render.
+    is_render = os.environ.get('RENDER', '') == 'true'
+    return jsonify({
+        'mode': 'browser',  # Always use browser camera now
+        'is_cloud': is_render
+    })
 
 # --- DATA UPDATES (AJAX) ---
 @app.route('/get_updates')
@@ -161,7 +188,7 @@ def accept_suggestion():
         return jsonify({'status': 'accepted'})
     return jsonify({'status': 'none'})
 
-# --- KEYBOARD HANDLER (Uses Shared Logic) ---
+# --- KEYBOARD HANDLER ---
 @app.route('/handle_keypress', methods=['POST'])
 def handle_keypress():
     key = request.get_json().get('key')
@@ -170,7 +197,7 @@ def handle_keypress():
         commit_current_word()
         
     elif key == 'Backspace':
-        perform_backspace() # Uses shared function from camera.py
+        perform_backspace()
         
     elif len(key) == 1 and key.isalpha():
         with data_lock:
@@ -179,7 +206,7 @@ def handle_keypress():
         
     return jsonify({'status': 'ok'})
 
-# --- DOWNLOAD TRANSCRIPT (TXT Format) ---
+# --- DOWNLOAD TRANSCRIPT ---
 @app.route('/download_transcript')
 @login_required
 def download_transcript():
@@ -206,7 +233,6 @@ def download_transcript():
 @login_required
 def save_session():
     try:
-        # Commit any pending word before saving
         if state.current_word: commit_current_word()
         
         final_en = state.current_sentence_en.strip()
@@ -216,7 +242,6 @@ def save_session():
 
         new_session = Session(english_text=final_en, native_text=final_native, author=current_user)
         
-        # Update User's Learned Words History
         try: current_list = set(json.loads(current_user.personal_history))
         except: current_list = set()
         
@@ -227,14 +252,13 @@ def save_session():
         db.session.add(new_session)
         db.session.commit()
         
-        # Reset current session data
         state.current_sentence_en = ""
         state.current_sentence_native = ""
         return jsonify({'status': 'saved'})
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
 
-# --- TEXT TO SPEECH (Full Sentence) ---
+# --- TEXT TO SPEECH ---
 @app.route('/speak_sentence', methods=['POST'])
 def speak_sentence():
     text = state.current_sentence_native.strip()
@@ -259,6 +283,5 @@ def set_language():
     return jsonify({'status': 'ok'})
 
 if __name__ == '__main__':
-    # threaded=True allows Camera + Buttons + Keyboard to work simultaneously
     port = int(os.environ.get('PORT', 5001))
     app.run(debug=False, host='0.0.0.0', port=port, threaded=True)
