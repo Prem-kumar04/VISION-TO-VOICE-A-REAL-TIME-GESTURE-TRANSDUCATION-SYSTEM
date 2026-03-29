@@ -117,11 +117,14 @@ body {
     padding: 15px;
     overflow-y: auto;
     margin-bottom: 20px;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 .sentence-group { margin-bottom: 15px; border-bottom: 1px solid #f1f1f1; padding-bottom: 10px; }
-.eng-sent { font-size: 1.1rem; color: #2d3436; font-weight: 500; margin-bottom: 5px; }
-.native-sent { font-size: 1.3rem; color: #0984e3; font-weight: bold; }
+.eng-sent { font-size: 1.1rem; color: #2d3436; font-weight: 500; margin-bottom: 5px; word-wrap: break-word; word-break: break-word; }
+.native-sent { font-size: 1.3rem; color: #0984e3; font-weight: bold; word-wrap: break-word; word-break: break-word; }
 
 /* PROFILE PAGE */
 .profile-header {

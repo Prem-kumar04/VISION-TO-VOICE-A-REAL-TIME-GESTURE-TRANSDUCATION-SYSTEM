@@ -72,28 +72,39 @@ def commit_current_word():
         
         print(f"✅ COMMITTING WORD: '{word}'")
 
-        try:
-            if state.selected_lang == 'en': trans = word
-            else: trans = translator.translate(word, dest=state.selected_lang).text
-        except: trans = word
-
         state.current_sentence_en += word + " "
-        state.current_sentence_native += trans + " "
         state.word_history.add(word)
         
         state.current_word = ""
         state.active_suggestion = ""
 
-    # Audio
-    ts = str(time.time()).replace('.', '')
-    fname = f"audio_{ts}.mp3"
-    abs_path = os.path.join(os.getcwd(), 'static', 'audio', fname)
-    web_path = f"/static/audio/{fname}"
-    try:
-        tts = gTTS(text=trans, lang=state.selected_lang, slow=False)
-        tts.save(abs_path)
-        state.last_audio_file = web_path
-    except: pass
+    # Translation & Audio (Async) - Run in background thread to avoid blocking
+    def translate_and_speak():
+        try:
+            if state.selected_lang == 'en': 
+                trans = word
+            else: 
+                trans = translator.translate(word, dest=state.selected_lang).text
+        except: 
+            trans = word
+        
+        # Update native translation
+        with data_lock:
+            state.current_sentence_native += trans + " "
+        
+        # Generate audio
+        try:
+            ts = str(time.time()).replace('.', '')
+            fname = f"audio_{ts}.mp3"
+            abs_path = os.path.join(os.getcwd(), 'static', 'audio', fname)
+            web_path = f"/static/audio/{fname}"
+            tts = gTTS(text=trans, lang=state.selected_lang, slow=False)
+            tts.save(abs_path)
+            state.last_audio_file = web_path
+        except: pass
+    
+    async_thread = threading.Thread(target=translate_and_speak, daemon=True)
+    async_thread.start()
 
 # --- VIDEO CAMERA ---
 model_path = os.path.join(os.path.dirname(__file__), 'model.p')
@@ -105,18 +116,27 @@ except FileNotFoundError:
 
 class VideoCamera(object):
     def __init__(self):
-        self.video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-
+        # Try multiple camera indices silently
+        self.video = None
+        for camera_index in [0, 1, -1]:  # -1 tries any available camera
+            try:
+                if camera_index == 0:
+                    self.video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+                else:
+                    self.video = cv2.VideoCapture(camera_index)
+                
+                if self.video.isOpened():
+                    print(f"✅ Camera opened successfully at index {camera_index}")
+                    break
+                else:
+                    self.video.release()
+                    self.video = None
+            except:
+                self.video = None
         
-        # Add this check
-        if not self.video.isOpened():
-            print("❌ Camera failed to open! Trying index 1...")
-            self.video = cv2.VideoCapture(1)
-        
-        if not self.video.isOpened():
-            print("❌ Camera index 1 also failed. Check camera permissions.")
-        else:
-            print("✅ Camera opened successfully")
+        if self.video is None:
+            print("⚠️ Warning: No camera detected. App will run in demo mode.")
+            self.video = cv2.VideoCapture(0)  # Keep placeholder
         
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=2, min_detection_confidence=0.5)

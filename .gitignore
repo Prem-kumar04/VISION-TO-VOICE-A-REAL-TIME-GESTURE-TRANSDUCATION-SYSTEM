@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Database
+site.db
+
+# Media and large generated files
+static/audio/*.mp3
+references/
+
+# dotenv
+.env
+__pycache__/
+*.pyc
+instance/
+static/audio/*.mp3
+.DS_Store
+data.csv

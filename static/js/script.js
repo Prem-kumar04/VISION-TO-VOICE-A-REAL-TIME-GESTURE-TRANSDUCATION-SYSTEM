@@ -1,5 +1,11 @@
 const UPDATE_INTERVAL = 100; 
 
+// --- SIGN LANGUAGE REFERENCE ---
+function openSignReference() {
+    const modal = new bootstrap.Modal(document.getElementById('signChartModal'), {});
+    modal.show();
+}
+
 // --- POLLING LOOP ---
 if (document.getElementById('liveWord')) {
     setInterval(async () => {

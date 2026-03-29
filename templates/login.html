@@ -18,6 +18,7 @@
 
         body {
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
@@ -30,28 +31,74 @@
             position: absolute;
             width: 100%;
             height: 100%;
-            background: url("https://i.ibb.co/XcCk6Fq/abcd.png");
+            background: url("{{ url_for('static', filename='bg.jpg') }}");
             background-position: center;
             background-size: cover;
             background-attachment: fixed;
+            z-index: 0;
+        }
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 70px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .page-title {
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            z-index: 10;
+            position: relative;
+        }
+
+        .page-title h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+            margin: 30px;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+
+        .page-title .icon-group {
+            display: none;
+        }
+
+        .page-title .icon-group i {
+            font-size: 2rem;
+        }
+
+        .icon-vision {
+            color: #4CAF50;
+        }
+
+        .icon-voice {
+            color: #2196F3;
         }
 
         .wrapper {
             width: 100%;
             max-width: 350px;
             border-radius: 12px;
-            padding: 40px;
+            padding: 25px;
             text-align: center;
-            border: 1px solid rgba(0, 0, 0, 0);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            background: transparent;
-            border-color: #000000;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             position: relative;
             z-index: 10;
-            margin-left: 500px;
-            margin-top: 200px;
+            margin: auto;
         }
 
         form {
@@ -70,44 +117,44 @@
         }
 
         .project-title h3 {
-            color: rgba(0, 0, 0, 0);
+            color: #333;
             font-size: 1.5rem;
             margin: 0;
             font-weight: 700;
         }
 
         .project-title .icon-vision {
-            color: rgba(0, 0, 0, 0);
+            color: #4CAF50;
             font-size: 1.5rem;
         }
 
         .project-title .icon-voice {
-            color: rgba(0, 0, 0, 0);
+            color: #2196F3;
             font-size: 1.5rem;
         }
 
         h2 {
             font-size: 1.8rem;
             margin-bottom: 1rem;
-            color: rgba(0, 0, 0, 0);
+            color: #333;
             font-weight: 700;
         }
 
         .subtitle {
-            color: rgba(0, 0, 0, 0);
+            color: #cccccc;
             font-size: 0.9rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 15px;
         }
 
         .input-field {
             position: relative;
-            border-bottom: 2px solid rgba(0, 0, 0, 0);
-            margin: 20px 0;
+            border-bottom: 2px solid #ccc;
+            margin: 12px 0;
             transition: 0.15s ease;
         }
 
         .input-field:focus-within {
-            border-bottom-color: rgba(0, 0, 0, 0);
+            border-bottom-color: #2196F3;
         }
 
         .input-field label {
@@ -115,7 +162,7 @@
             top: 50%;
             left: 0;
             transform: translateY(-50%);
-            color: rgba(0, 0, 0, 0.6);
+            color: #666;
             font-size: 15px;
             pointer-events: none;
             transition: 0.15s ease;
@@ -125,11 +172,54 @@
         .input-field input {
             width: 100%;
             height: 45px;
-            background: transparent;
+            background: transparent !important;
             border: none;
             outline: none;
             font-size: 15px;
-            color: #000000;
+            color: #ffffff;
+            caret-color: #ffffff;
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .input-field input::placeholder {
+            color: transparent !important;
+        }
+
+        .input-field input:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .input-field input:-webkit-autofill:hover {
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .input-field input:-webkit-autofill:focus {
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-transition: background-color 5000s ease-in-out 0s;
+        }
+
+        .input-field input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+            -webkit-text-fill-color: #ffffff !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            transition: background-color 5000s ease-in-out 0s;
+            -webkit-transition: background-color 5000s ease-in-out 0s;
         }
 
         .input-field input::placeholder {
@@ -141,34 +231,29 @@
             font-size: 0.75rem;
             top: 10px;
             transform: translateY(-120%);
-            color: #000000;
+            color: #ffffff;
             font-weight: 600;
-        }
-
-        .input-field input:-webkit-autofill {
-            -webkit-box-shadow: 0 0 0 1000px #000000 inset !important;
-            -webkit-text-fill-color: #000000 !important;
         }
 
         .forget {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin: 30px 0 35px 0;
-            color: #000000;
+            margin: 15px 0 15px 0;
+            color: #ffffff;
             flex-wrap: wrap;
             gap: 10px;
         }
 
         .forget a {
-            color: #000000;
+            color: #ffffff;
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             transition: 0.15s ease;
         }
 
         .forget a:hover {
-            color: #000000;
+            color: #ffffff;
             text-decoration: underline;
         }
 
@@ -183,7 +268,7 @@
             font-size: 16px;
             border: 2px solid transparent;
             transition: 0.3s ease;
-            margin-top: 10px;
+            margin-top: 8px;
             box-shadow: 0 6px 18px rgba(255, 183, 77, 0.12);
         }
 
@@ -268,45 +353,49 @@
     </style>
 </head>
 <body>
-    <div class="wrapper">
-        
+    <div class="main-container">
+        <div class="page-title">
+            <h1>Vision-to-Voice: A Real-Time Gesture Transduction System</h1>
+        </div>
 
-        <form method="POST">
-            <h2 style="color: #000000;">Login</h2>
-            <p class="subtitle">Sign in to your account</p>
+        <div class="wrapper">
+            <form method="POST">
+                <h2 style="color: #ffffff;">Login</h2>
+                <p class="subtitle">Sign in to your account</p>
 
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
 
-            <div class="input-field">
-                <input type="text" name="username" required>
-                <label>Username</label>
+                <div class="input-field">
+                    <input type="text" name="username" required>
+                    <label>Username</label>
+                </div>
+
+                <div class="input-field">
+                    <input type="password" name="password" required>
+                    <label>Password</label>
+                </div>
+
+                <div class="forget">
+                    <a href="/signup">Register</a>
+                    <a href="#">Forgot password?</a>
+                </div>
+
+                <button type="submit">
+                    <i class="fas fa-sign-in-alt"></i> Log In
+                </button>
+            </form>
+
+            <div class="register-section" style="color: #000000;">
+                Don't have an account? <a href="/signup">Create one now</a>
             </div>
-
-            <div class="input-field">
-                <input type="password" name="password" required>
-                <label>Password</label>
-            </div>
-
-            <div class="forget">
-                <a href="/signup">Register</a>
-                <a href="#">Forgot password?</a>
-            </div>
-
-            <button type="submit">
-                <i class="fas fa-sign-in-alt"></i> Log In
-            </button>
-        </form>
-
-        <div class="register-section" style="color: #000000;">
-            Don't have an account? <a href="/signup">Create one now</a>
         </div>
     </div>
 

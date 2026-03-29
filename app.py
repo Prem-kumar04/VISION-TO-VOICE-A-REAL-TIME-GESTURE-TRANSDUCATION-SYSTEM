@@ -11,8 +11,9 @@ from gtts import gTTS
 from datetime import datetime
 import io
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret'
+app = Flask(__name__, static_folder='static', static_url_path='/static')
+# Prefer environment variable for SECRET_KEY; fallback for local dev
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-this-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
