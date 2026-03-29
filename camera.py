@@ -150,6 +150,9 @@ class FrameProcessor(object):
             if ',' in base64_data:
                 base64_data = base64_data.split(',')[1]
             
+            # Python base64 requires proper padding
+            base64_data += "=" * ((4 - len(base64_data) % 4) % 4)
+            
             img_bytes = base64.b64decode(base64_data)
             nparr = np.frombuffer(img_bytes, np.uint8)
             frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)

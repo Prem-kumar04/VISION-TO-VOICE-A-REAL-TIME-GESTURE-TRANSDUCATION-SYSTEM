@@ -49,44 +49,61 @@ function startWebRTCStream(video, canvas) {
     const captureCanvas = document.createElement('canvas');
     const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
     
-    setInterval(async () => {
+    let isProcessing = false;
+
+    async function processNextFrame() {
         if (!cameraActive) return;
         
-        // Grab the raw frame
-        captureCanvas.width = video.videoWidth;
-        captureCanvas.height = video.videoHeight;
-        if(captureCanvas.width === 0) return;
-        captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
-        const b64 = captureCanvas.toDataURL('image/jpeg', 0.6); 
-        
-        try {
-            const response = await fetch('/process_frame', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ frame: b64 })
-            });
-            const data = await response.json();
+        if (!isProcessing) {
+            isProcessing = true;
             
-            if (data.annotated_frame) {
-                // Safely update the main visible canvas ONLY when ML server responds
-                const img = new Image();
-                img.onload = () => {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    context.clearRect(0, 0, canvas.width, canvas.height);
-                    context.drawImage(img, 0, 0, canvas.width, canvas.height);
-                };
-                img.src = "data:image/jpeg;base64," + data.annotated_frame;
-            } else {
-                // If there's no annotated frame, fall back to showing the raw video
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                context.clearRect(0, 0, canvas.width, canvas.height);
-                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            // Grab the raw frame
+            captureCanvas.width = video.videoWidth;
+            captureCanvas.height = video.videoHeight;
+            
+            if (captureCanvas.width > 0) {
+                captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+                const b64 = captureCanvas.toDataURL('image/jpeg', 0.6); 
+                
+                try {
+                    const response = await fetch('/process_frame', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ frame: b64 })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.annotated_frame) {
+                        // Safely update the main visible canvas ONLY when ML server responds
+                        const img = new Image();
+                        img.onload = () => {
+                            canvas.width = video.videoWidth;
+                            canvas.height = video.videoHeight;
+                            context.clearRect(0, 0, canvas.width, canvas.height);
+                            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        };
+                        img.src = "data:image/jpeg;base64," + data.annotated_frame;
+                    } else {
+                        // Fall back to showing raw video
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.clearRect(0, 0, canvas.width, canvas.height);
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    }
+                    updateUI(data);
+                } catch(e) {
+                    console.error("Frame processing error:", e);
+                }
             }
-            updateUI(data);
-        } catch(e) {}
-    }, UPDATE_INTERVAL); 
+            isProcessing = false;
+        }
+        
+        // Wait the minimum interval before processing the next frame
+        setTimeout(processNextFrame, UPDATE_INTERVAL);
+    }
+    
+    // Start the recursive loop
+    processNextFrame();
 }
 
 function startPollingUpdates() {
