@@ -45,14 +45,19 @@ async function initBrowserCamera() {
 function startWebRTCStream(video, canvas) {
     const context = canvas.getContext('2d', { willReadFrequently: true });
     
+    // Create an invisible canvas to capture the raw frame seamlessly
+    const captureCanvas = document.createElement('canvas');
+    const captureCtx = captureCanvas.getContext('2d', { willReadFrequently: true });
+    
     setInterval(async () => {
         if (!cameraActive) return;
         
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const b64 = canvas.toDataURL('image/jpeg', 0.6); 
+        // Grab the raw frame
+        captureCanvas.width = video.videoWidth;
+        captureCanvas.height = video.videoHeight;
+        if(captureCanvas.width === 0) return;
+        captureCtx.drawImage(video, 0, 0, captureCanvas.width, captureCanvas.height);
+        const b64 = captureCanvas.toDataURL('image/jpeg', 0.6); 
         
         try {
             const response = await fetch('/process_frame', {
@@ -63,12 +68,21 @@ function startWebRTCStream(video, canvas) {
             const data = await response.json();
             
             if (data.annotated_frame) {
+                // Safely update the main visible canvas ONLY when ML server responds
                 const img = new Image();
                 img.onload = () => {
-                    context.clearRect(0,0, canvas.width, canvas.height);
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.clearRect(0, 0, canvas.width, canvas.height);
                     context.drawImage(img, 0, 0, canvas.width, canvas.height);
                 };
                 img.src = "data:image/jpeg;base64," + data.annotated_frame;
+            } else {
+                // If there's no annotated frame, fall back to showing the raw video
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
             }
             updateUI(data);
         } catch(e) {}
