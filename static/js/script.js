@@ -24,6 +24,7 @@ async function initBrowserCamera() {
         videoElement.srcObject = stream;
         
         videoElement.onloadedmetadata = () => {
+            videoElement.play(); // Explicitly start the video stream
             cameraActive = true;
             if (promptEl) promptEl.style.display = 'none';
             if (statusEl) {
