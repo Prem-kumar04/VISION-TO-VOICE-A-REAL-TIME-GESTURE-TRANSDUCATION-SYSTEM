@@ -115,29 +115,18 @@ try:
 except FileNotFoundError:
     model = None
 
-class VideoCamera(object):
+class FrameProcessor(object):
     def __init__(self):
-        # Try multiple camera indices silently
-        self.video = None
-        for camera_index in [0, 1, -1]:  # -1 tries any available camera
-            try:
-                if camera_index == 0:
-                    self.video = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-                else:
-                    self.video = cv2.VideoCapture(camera_index)
-                
-                if self.video.isOpened():
-                    print(f"✅ Camera opened successfully at index {camera_index}")
-                    break
-                else:
-                    self.video.release()
-                    self.video = None
-            except:
-                self.video = None
-        
-        if self.video is None:
-            print("⚠️ Warning: No camera detected. App will run in demo mode.")
-            self.video = cv2.VideoCapture(0)  # Keep placeholder
+        # Tracking tools initialization
+        self.mp_hands = mp.solutions.hands
+        self.hands = self.mp_hands.Hands(
+            static_image_mode=False, 
+            max_num_hands=2, 
+            min_detection_confidence=0.5
+        )
+        self.mp_draw = mp.solutions.drawing_utils
+        self.hand_history = []
+        self.hand_was_visible = False
         
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
