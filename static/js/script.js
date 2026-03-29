@@ -1,4 +1,6 @@
-const UPDATE_INTERVAL = 100; 
+// ============================================================
+// BROWSER WEBCAM + SERVER ML PROCESSING
+// ============================================================
 
 // --- SIGN LANGUAGE REFERENCE ---
 function openSignReference() {
@@ -12,28 +14,13 @@ if (document.getElementById('liveWord')) {
         try {
             const response = await fetch('/get_updates');
             const data = await response.json();
-
-            // UI Updates
-            document.getElementById('livePreview').innerText = data.live_preview || "_";
-            document.getElementById('liveWord').innerText = data.current_word;
-            document.getElementById('confScore').innerText = data.confidence + "%";
-            document.getElementById('engOut').innerText = data.sentence_en;
-            document.getElementById('nativeOut').innerText = data.sentence_native;
-
-            // Suggestions
-            const suggestionBox = document.getElementById('suggestionText');
-            if (data.suggestion && data.suggestion.length > (data.current_word || "").length) {
-                suggestionBox.innerText = data.suggestion.substring((data.current_word || "").length);
-                document.getElementById('enterHint').style.display = "block";
-            } else {
-                suggestionBox.innerText = "";
-                document.getElementById('enterHint').style.display = "none";
-            }
-
+            updateUI(data);
         } catch (error) { console.error(error); }
     }, UPDATE_INTERVAL);
+}
 
-    // --- KEYBOARD LISTENER ---
+// --- KEYBOARD LISTENER ---
+if (document.getElementById('liveWord')) {
     document.addEventListener('keydown', async (event) => {
         const key = event.key;
         
@@ -45,12 +32,20 @@ if (document.getElementById('liveWord')) {
 
         // 2. Letters, Space, AND BACKSPACE
         if ((key.length === 1 && key.match(/[a-z ]/i)) || key === 'Backspace') {
-            
             await fetch('/handle_keypress', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key: key === ' ' ? 'Space' : key })
             });
+        }
+    });
+
+    // Initialize camera on page load
+    initBrowserCamera().then(() => {
+        // If camera failed, start polling for keyboard-only updates
+        if (!cameraActive) {
+            console.log("Camera not active, starting polling for keyboard updates...");
+            startPollingUpdates();
         }
     });
 }

@@ -18,6 +18,66 @@
             transition: transform 0.2s; float: right;
         }
         .speak-btn:hover { transform: scale(1.2); }
+        
+        /* Browser camera styles */
+        #browserVideo {
+            display: none; /* Hidden - we only capture from it */
+        }
+        #cameraCanvas {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .camera-status {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            z-index: 10;
+            letter-spacing: 0.5px;
+        }
+        .camera-status.connecting {
+            background: rgba(255, 165, 0, 0.9);
+            color: #fff;
+        }
+        .camera-status.live {
+            background: rgba(0, 200, 83, 0.9);
+            color: #fff;
+            animation: pulse-live 2s infinite;
+        }
+        .camera-status.error {
+            background: rgba(255, 59, 48, 0.9);
+            color: #fff;
+        }
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .camera-permission-prompt {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #ccc;
+            z-index: 5;
+        }
+        .camera-permission-prompt h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+        .camera-permission-prompt p {
+            font-size: 0.9rem;
+            color: #999;
+        }
+        .camera-permission-prompt .cam-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: block;
+        }
     </style>
 </head>
 <body id="dashboard-page">
@@ -39,7 +99,21 @@
 
     <div class="main-content">
         <div class="camera-container">
-            <img src="{{ url_for('video_feed') }}" class="camera-feed">
+            <!-- Status badge -->
+            <span id="cameraStatus" class="camera-status connecting">⏳ Connecting Camera...</span>
+            
+            <!-- Permission prompt (shown before camera starts) -->
+            <div id="cameraPrompt" class="camera-permission-prompt">
+                <span class="cam-icon">📷</span>
+                <h3>Starting Camera...</h3>
+                <p>Please allow camera access when prompted by your browser.</p>
+            </div>
+            
+            <!-- Hidden video element for browser webcam -->
+            <video id="browserVideo" autoplay playsinline muted></video>
+            
+            <!-- Canvas to display annotated frames from server -->
+            <canvas id="cameraCanvas" class="camera-feed"></canvas>
         </div>
 
         <div class="text-panel">
